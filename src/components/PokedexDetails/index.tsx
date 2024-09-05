@@ -1,7 +1,7 @@
 import React, { useEffect, useLayoutEffect, useRef, useState } from 'react'
+
 import { cn } from '@/utils/Utils'
 import { usePokedexStore } from '@/store/PokedexStore'
-import { getTextColorFromBackground } from '@/utils/ColorUtils'
 
 interface IPokedexDetails {}
 const PokedexDetails: React.FC<IPokedexDetails> = () => {
@@ -41,8 +41,8 @@ const PokedexDetails: React.FC<IPokedexDetails> = () => {
 
         setUpdatedPosition(true)
 
-        if (ref.current) {
-            ref.current.style.backgroundColor = `rgba(${detailsBgColor[0]}, ${detailsBgColor[1]}, ${detailsBgColor[2]}, 1)`
+        if (ref.current && detailsBgColor) {
+            ref.current.style.backgroundColor = detailsBgColor.rgb
         }
 
         console.log('new pos')
@@ -204,16 +204,15 @@ const PokedexDetails: React.FC<IPokedexDetails> = () => {
                     }
                 )}
                 style={{
-                    color: getTextColorFromBackground([...detailsBgColor, 0.1]),
+                    color: detailsBgColor?.isDark
+                        ? 'rgba(255,255,255, 0.1)'
+                        : 'rgba(0,0,0, 0.1)',
                 }}
             >
                 <li
                     className="text-4xl text-center"
                     style={{
-                        color: getTextColorFromBackground([
-                            ...detailsBgColor,
-                            0.75,
-                        ]),
+                        color: detailsBgColor?.rgba,
                     }}
                 >
                     フシギダネ

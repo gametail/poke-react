@@ -1,24 +1,38 @@
 import { BiAbacus } from 'react-icons/bi'
-import PokedexEntry from './components/PokedexEntry'
-import usePokemonData from './hooks/usePokemon'
-import { PokemonType } from './utils/TypeToIconMap'
 import PokeballLogo from '@/assets/pokedex.svg?react'
 import PokedexDetails from './components/PokedexDetails'
+import PokedexEntry from './components/PokedexEntry'
 import { cn } from './utils/Utils'
 import { usePokedexStore } from './store/PokedexStore'
+import usePokemons from './hooks/usePokemons'
 
 function App() {
-    const { pokemon, pokemonSpecies, error, loading } = usePokemonData([1, 20])
+    const {
+        pokemons,
+        isError,
+        error,
+        isLoading,
+        fetchNextPage,
+        isFetchingNextPage,
+        hasNextPage,
+    } = usePokemons()
     const { isTransitioning, openDetails } = usePokedexStore()
 
-    if (loading) return <div>Loading...</div>
-    if (error) return <div>{error}</div>
+    if (isLoading) return <div>Loading...</div>
+    if (isError) return <div>{error?.message}</div>
 
     return (
         <div className="relative flex flex-col w-screen h-screen gap-8 p-5 bg-slate-200 overflow-clip">
+            <button
+                className="absolute top-0 left-0 right-0 px-2 py-4 bg-blue-600 rounded disabled:bg-gray-600"
+                onClick={() => fetchNextPage()}
+                disabled={isFetchingNextPage || !hasNextPage}
+            >
+                Fetch More
+            </button>
             <PokeballLogo className="absolute z-10 w-64 translate-x-1/2 -translate-y-1/2 top-10 right-9 text-black/5" />
             <div className="flex items-center justify-between">
-                <h1 className="text-4xl font-bold ">Pokedex</h1>
+                <h1 className="text-4xl fo nt-bold ">Pokedex</h1>
                 <button className="relative overflow-visible">
                     <BiAbacus className="text-3xl" />
                 </button>
@@ -32,16 +46,12 @@ function App() {
                 )}
             >
                 <PokedexDetails />
-                {pokemon.map((entry) => {
+                {pokemons.map((pokemon) => {
                     return (
                         <PokedexEntry
-                            key={entry.id}
-                            name={entry.name}
-                            id={entry.id}
-                            types={[
-                                entry.types[0].type.name as PokemonType,
-                                entry.types[1]?.type.name as PokemonType,
-                            ]}
+                            key={pokemon.id}
+                            name={pokemon.name}
+                            id={pokemon.id}
                         />
                     )
                 })}

@@ -1,3 +1,4 @@
+import { FastAverageColorResult } from 'fast-average-color'
 import { RefObject } from 'react'
 import { create } from 'zustand'
 
@@ -17,8 +18,8 @@ interface IPokedexState {
     isTransitioning: boolean
     setIsTransitioning: (isTransitioning: boolean) => void
 
-    detailsBgColor: [number, number, number]
-    setDetailsBgColor: (detailsBgColor: [number, number, number]) => void
+    detailsBgColor: FastAverageColorResult | null
+    setDetailsBgColor: (detailsBgColor: FastAverageColorResult) => void
 }
 
 export const usePokedexStore = create<IPokedexState>()((set) => ({
@@ -34,6 +35,6 @@ export const usePokedexStore = create<IPokedexState>()((set) => ({
     isTransitioning: false,
     setIsTransitioning: (isTransitioning) => set({ isTransitioning }),
 
-    detailsBgColor: [0, 0, 0],
+    detailsBgColor: null,
     setDetailsBgColor: (detailsBgColor) => set({ detailsBgColor }),
 }))

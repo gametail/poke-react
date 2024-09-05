@@ -1,21 +1,18 @@
 import typeToIconMap, { PokemonType } from '@/utils/TypeToIconMap'
-import { useRef, useState } from 'react'
-import { prominent } from 'color.js'
-import { getTextColorFromBackground } from '@/utils/ColorUtils'
-import { usePokedexStore } from '@/store/PokedexStore'
+
 import { cn } from '@/utils/Utils'
+import { usePokedexStore } from '@/store/PokedexStore'
+import usePokemon from '@/hooks/usePokemon'
+import usePokemonColor from '@/hooks/usePokemonColor'
+import { useRef } from 'react'
 
 interface IPokedexEntry {
     name: string
     id: number
-    types: [PokemonType, PokemonType?]
 }
 
-const PokedexEntry: React.FC<IPokedexEntry> = ({ name, id, types }) => {
+const PokedexEntry: React.FC<IPokedexEntry> = ({ name, id }) => {
     const imageRef = useRef(null)
-    const [bgColor, setBgColor] = useState<[number, number, number]>([
-        255, 255, 255,
-    ])
     const ref = useRef(null)
     const {
         setLastClickedRef,
@@ -25,20 +22,25 @@ const PokedexEntry: React.FC<IPokedexEntry> = ({ name, id, types }) => {
         lastClickedId,
         setLastClickedId,
     } = usePokedexStore()
+    const { data } = usePokemon(id)
+    const { bgColor, textColors } = usePokemonColor(imageRef)
+    const { textColorHalf, textColorLow } = textColors || {}
 
-    const colorHalf = getTextColorFromBackground([...bgColor, 0.5])
-    const colorLow = getTextColorFromBackground([...bgColor, 0.1])
+    const { types } = data || {}
 
-    const TypeIcon = typeToIconMap[types[0]]
+    const TypeIcon = data
+        ? typeToIconMap[data.types[0].type.name as PokemonType]
+        : null
+
     return (
         <div
             ref={ref}
-            className={cn('z-40 h-32 bg-white rounded-xl overflow-clip', {
+            className={cn('z-40 h-32 rounded-xl overflow-clip', {
                 'z-[50] bg-transparent':
                     (isTransitioning || openDetails) && lastClickedId === id,
             })}
             onClick={() => {
-                if (!isTransitioning) {
+                if (!isTransitioning && bgColor) {
                     setLastClickedRef(ref)
                     setLastClickedId(id)
                     setDetailsBgColor(bgColor)
@@ -53,65 +55,63 @@ const PokedexEntry: React.FC<IPokedexEntry> = ({ name, id, types }) => {
                     }
                 )}
                 style={{
-                    backgroundColor: `rgba(${bgColor[0]}, ${bgColor[1]}, ${bgColor[2]}, 0.9)`,
+                    backgroundColor: bgColor?.rgb,
                 }}
             >
-                <p className="absolute font-extrabold tracking-wide right-5 top-1 text-black/40">
+                <p
+                    className="absolute font-extrabold tracking-wide right-5 top-1"
+                    style={{
+                        color: textColorHalf,
+                    }}
+                >
                     #{String(id).padStart(4, '0')}
                 </p>
                 <p
                     className="my-2 font-semibold capitalize text-nowrap text-ellipsis overflow-clip"
                     style={{
-                        color: colorHalf,
+                        color: textColorHalf,
                     }}
                 >
                     {name}
                 </p>
-                <div className="flex flex-col gap-2">
-                    <p
-                        className="px-4 py-0.5 text-xs rounded-full bg-white/25 w-fit capitalize"
-                        style={{
-                            color: colorHalf,
-                            backgroundColor: colorLow,
-                        }}
-                    >
-                        {types[0]}
-                    </p>
-                    {types[1] && (
+                {types && (
+                    <div className="flex flex-col gap-2">
                         <p
-                            className="px-4 py-0.5 text-xs rounded-full bg-white/25 w-fit capitalize"
+                            className="px-4 py-0.5 text-xs rounded-full w-fit capitalize"
                             style={{
-                                color: colorHalf,
-                                backgroundColor: colorLow,
+                                color: textColorHalf,
+                                backgroundColor: textColorLow,
                             }}
                         >
-                            {types[1]}
+                            {types[0].type.name}
                         </p>
-                    )}
-                </div>
+                        {types[1] && (
+                            <p
+                                className="px-4 py-0.5 text-xs rounded-full w-fit capitalize"
+                                style={{
+                                    color: textColorHalf,
+                                    backgroundColor: textColorLow,
+                                }}
+                            >
+                                {types[1].type.name}
+                            </p>
+                        )}
+                    </div>
+                )}
                 <img
                     ref={imageRef}
-                    onLoad={() => {
-                        if (!imageRef.current) return
-                        prominent(imageRef.current, {
-                            format: 'array',
-                            sample: 10,
-                            group: 3,
-                        }).then((color) => {
-                            const [, color2] = color
-                            setBgColor(color2 as [number, number, number])
-                        })
-                    }}
                     className="absolute right-0 z-50 w-20 bottom-2 drop-shadow-lg"
-                    src={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${id}.png`}
+                    src={`./src/assets/pokemon-artworks/${id}.png`}
                     alt={name}
                 />
-                <TypeIcon
-                    className="absolute bottom-0 right-0 w-20 h-20 fill-current"
-                    style={{
-                        color: colorLow,
-                    }}
-                />
+                {TypeIcon && (
+                    <TypeIcon
+                        className="absolute bottom-0 right-0 w-20 h-20 fill-current"
+                        style={{
+                            color: textColorLow,
+                        }}
+                    />
+                )}
             </div>
         </div>
     )
