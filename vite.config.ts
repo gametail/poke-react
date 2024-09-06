@@ -7,7 +7,9 @@ import svgr from 'vite-plugin-svgr'
 export default defineConfig({
     plugins: [react(), svgr()],
     resolve: {
-        alias: [{ find: '@', replacement: resolve(__dirname, './src') }],
+        alias: {
+            '@': resolve(__dirname, './src'),
+        },
     },
 
     base: '/poke-react/',
