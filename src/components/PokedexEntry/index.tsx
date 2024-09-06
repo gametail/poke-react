@@ -49,13 +49,14 @@ const PokedexEntry: React.FC<IPokedexEntry> = ({ name, id }) => {
         >
             <div
                 className={cn(
-                    'relative h-full p-4 transition-opacity duration-200 ease-in-out',
+                    'relative h-full p-4 duration-200 ease-in-out bg-gray-300',
                     {
                         ' opacity-0': openDetails && lastClickedId === id,
                     }
                 )}
                 style={{
                     backgroundColor: bgColor?.rgb,
+                    transitionProperty: 'background-color, opacity',
                 }}
             >
                 <p

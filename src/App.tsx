@@ -1,8 +1,12 @@
+import { useEffect, useRef } from 'react'
+
 import { BiAbacus } from 'react-icons/bi'
 import PokeballLogo from '@/assets/pokedex.svg?react'
 import PokedexDetails from './components/PokedexDetails'
 import PokedexEntry from './components/PokedexEntry'
+import PokedexEntrySkeleton from './components/PokedexEntrySkeleton'
 import { cn } from './utils/Utils'
+import { useIntersection } from '@mantine/hooks'
 import { usePokedexStore } from './store/PokedexStore'
 import usePokemons from './hooks/usePokemons'
 
@@ -17,19 +21,23 @@ function App() {
         hasNextPage,
     } = usePokemons()
     const { isTransitioning, openDetails } = usePokedexStore()
+    const lastEntryRef = useRef<HTMLDivElement>(null)
+    const { ref, entry } = useIntersection({
+        root: lastEntryRef.current,
+        threshold: 1,
+    })
 
-    if (isLoading) return <div>Loading...</div>
+    useEffect(() => {
+        if (entry?.isIntersecting) {
+            fetchNextPage()
+        }
+    }, [entry])
+
+    if (isLoading) return <PokedexEntrySkeleton />
     if (isError) return <div>{error?.message}</div>
 
     return (
         <div className="relative flex flex-col w-screen h-screen gap-8 p-5 bg-slate-200 overflow-clip">
-            <button
-                className="absolute top-0 left-0 right-0 px-2 py-4 bg-blue-600 rounded disabled:bg-gray-600"
-                onClick={() => fetchNextPage()}
-                disabled={isFetchingNextPage || !hasNextPage}
-            >
-                Fetch More
-            </button>
             <PokeballLogo className="absolute z-10 w-64 translate-x-1/2 -translate-y-1/2 top-10 right-9 text-black/5" />
             <div className="flex items-center justify-between">
                 <h1 className="text-4xl fo nt-bold ">Pokedex</h1>
@@ -55,6 +63,7 @@ function App() {
                         />
                     )
                 })}
+                {hasNextPage && <PokedexEntrySkeleton ref={ref} />}
             </div>
         </div>
     )
