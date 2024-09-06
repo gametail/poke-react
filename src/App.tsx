@@ -11,15 +11,8 @@ import { usePokedexStore } from './store/PokedexStore'
 import usePokemons from './hooks/usePokemons'
 
 function App() {
-    const {
-        pokemons,
-        isError,
-        error,
-        isLoading,
-        fetchNextPage,
-        isFetchingNextPage,
-        hasNextPage,
-    } = usePokemons()
+    const { pokemons, isError, error, isLoading, fetchNextPage, hasNextPage } =
+        usePokemons()
     const { isTransitioning, openDetails } = usePokedexStore()
     const lastEntryRef = useRef<HTMLDivElement>(null)
     const { ref, entry } = useIntersection({

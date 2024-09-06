@@ -102,7 +102,9 @@ const PokedexEntry: React.FC<IPokedexEntry> = ({ name, id }) => {
                 <img
                     ref={imageRef}
                     className="absolute right-0 z-50 w-20 bottom-2 drop-shadow-lg"
-                    src={`./src/assets/pokemon-artworks/${id}.png`}
+                    src={`${
+                        import.meta.env.BASE_URL
+                    }pokemon-artworks/${id}.png`}
                     alt={name}
                 />
                 {TypeIcon && (
