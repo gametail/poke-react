@@ -73,7 +73,7 @@ const PokedexDetails: React.FC<IPokedexDetails> = () => {
                 transitionTimingFunction: updatedPosition
                     ? 'cubic-bezier(0.65, 0, 0.35, 1)'
                     : '',
-                transitionDuration: updatedPosition ? '0.3s' : '',
+                transitionDuration: updatedPosition ? '0.5s' : '',
                 width: openDetails
                     ? '100vw'
                     : lastClickedRef?.current?.getBoundingClientRect().width,
@@ -106,7 +106,7 @@ const PokedexDetails: React.FC<IPokedexDetails> = () => {
             <img
                 src={img}
                 className={cn(
-                    `absolute w-20 h-auto bottom-2 right-0 pointer-events-none`,
+                    `absolute w-20 max-w-80 h-auto bottom-2 right-0 pointer-events-none`,
                     {
                         'w-full bottom-0': openDetails,
                     }
@@ -118,7 +118,7 @@ const PokedexDetails: React.FC<IPokedexDetails> = () => {
                     transitionTimingFunction: updatedPosition
                         ? 'cubic-bezier(0.65, 0, 0.35, 1)'
                         : '',
-                    transitionDuration: updatedPosition ? '0.3s' : '',
+                    transitionDuration: updatedPosition ? '0.5s' : '',
                 }}
             />
         </div>
