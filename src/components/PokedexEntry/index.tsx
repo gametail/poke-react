@@ -26,10 +26,11 @@ const PokedexEntry: React.FC<IPokedexEntry> = ({ name, id }) => {
     const { bgColor, textColors } = usePokemonColor(imageRef)
     const { textColorHalf, textColorLow } = textColors || {}
 
-    const { types } = data || {}
+    const { pokemonData } = data || {}
+    const { types } = pokemonData || {}
 
-    const TypeIcon = data
-        ? typeToIconMap[data.types[0].type.name as PokemonType]
+    const TypeIcon = pokemonData
+        ? typeToIconMap[pokemonData.types[0].type.name as PokemonType]
         : null
 
     return (
