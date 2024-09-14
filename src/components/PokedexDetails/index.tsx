@@ -106,7 +106,7 @@ const PokedexDetails: React.FC<IPokedexDetails> = () => {
             <img
                 src={img}
                 className={cn(
-                    `absolute w-20 max-w-80 h-auto bottom-2 right-0 pointer-events-none`,
+                    `absolute w-20 landscape:max-w-80 h-auto bottom-2 right-0 pointer-events-none`,
                     {
                         'w-full bottom-0': openDetails,
                     }

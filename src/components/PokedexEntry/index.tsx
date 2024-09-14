@@ -112,7 +112,7 @@ const PokedexEntry: React.FC<IPokedexEntry> = ({ name, id }) => {
                     <TypeIcon
                         className="absolute bottom-0 right-0 w-20 h-20 fill-current"
                         style={{
-                            color: textColorLow,
+                            color: textColorLow || 'rgba(128,128,128,0.1)',
                         }}
                     />
                 )}
