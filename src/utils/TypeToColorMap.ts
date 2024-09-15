@@ -15,7 +15,7 @@ const typeToColorMap: Record<PokemonType, string> = {
     bug: '#91c12f',
     rock: '#c5b78c',
     ghost: '#5269ad',
-    dragon: '#fa7179',
+    dragon: '#0b6dc3',
     dark: '#5a5465',
     steel: '#5a8ea2',
     fairy: '#ec8fe6',

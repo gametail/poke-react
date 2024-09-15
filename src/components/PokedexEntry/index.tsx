@@ -1,31 +1,39 @@
-import { forwardRef, useRef, useState } from 'react'
+import { forwardRef, useEffect, useRef, useState } from 'react'
 import typeToIconMap, { PokemonType } from '@/utils/TypeToIconMap'
 
+import { Language } from '@/utils/PokemonApiUtils'
 import PokemonNameList from '../PokemonNameList'
 import { cn } from '@/utils/Utils'
 import { flushSync } from 'react-dom'
 import typeToColorMap from '@/utils/TypeToColorMap'
-import { usePokedexStore } from '@/store/PokedexStore'
+import { useIntersection } from '@mantine/hooks'
 import usePokemon from '@/hooks/usePokemon'
 import usePokemonColor from '@/hooks/usePokemonColor'
 
 interface IPokedexEntry {
-    name: string
     id: number
+    language: Language
 }
 
 const PokedexEntry = forwardRef<HTMLDivElement, IPokedexEntry>(
-    ({ name, id }, ref) => {
+    ({ id, language }, ref) => {
         const imageRef = useRef<HTMLImageElement>(null)
-        const [isOpen, setIsOpen] = useState<boolean>(false)
-        const { lastClickedId, setLastClickedId } = usePokedexStore()
+        const cardRef = useRef<HTMLDivElement>(null)
 
-        const { data } = usePokemon(id)
+        const [isOpen, setIsOpen] = useState<boolean>(false)
+        const [ruleIndices, setRuleIndices] = useState<number[] | null>(null)
+        const [inView, setInView] = useState<boolean>(false)
+
         const { bgColor, textColors } = usePokemonColor(imageRef)
         const { textColorHalf, textColorLow } = textColors || {}
 
+        const { data } = usePokemon(id)
         const { pokemonData } = data || {}
         const { types } = pokemonData || {}
+
+        const { names } = data?.pokemonSpeciesData || {}
+        const name =
+            names?.find((name) => name.language.name === language)?.name || ''
 
         const Type1Icon = pokemonData
             ? typeToIconMap[pokemonData.types[0].type.name as PokemonType]
@@ -41,34 +49,107 @@ const PokedexEntry = forwardRef<HTMLDivElement, IPokedexEntry>(
             ? typeToColorMap[pokemonData.types[1]?.type.name as PokemonType]
             : ''
 
+        const handleClick = async () => {
+            if (!document.startViewTransition) return
+
+            const anim = document.startViewTransition(() => {
+                flushSync(() => {
+                    if (!isOpen) {
+                        const styleSheet = document.styleSheets[0]
+                        const ruleBody = `
+                                ::view-transition-group(body-${id}) {
+                                    z-index: 100;
+                                }`
+                        const ruleName = `::view-transition-group(name-${id}) {
+                                    z-index: 101;
+                                }`
+                        const ruleType1 = `::view-transition-group(type-1-${id}) {
+                                    z-index: 101;
+                                }`
+                        const ruleType2 = `::view-transition-group(type-2-${id}) {
+                                    z-index: 101;
+                                }`
+                        const ruleImage = `::view-transition-group(image-${id}) {
+                                    z-index: 101;
+                                }`
+
+                        const indices = []
+                        indices.push(
+                            styleSheet.insertRule(
+                                ruleBody,
+                                styleSheet.cssRules.length
+                            )
+                        )
+                        indices.push(
+                            styleSheet.insertRule(
+                                ruleName,
+                                styleSheet.cssRules.length
+                            )
+                        )
+                        indices.push(
+                            styleSheet.insertRule(
+                                ruleType1,
+                                styleSheet.cssRules.length
+                            )
+                        )
+                        indices.push(
+                            styleSheet.insertRule(
+                                ruleType2,
+                                styleSheet.cssRules.length
+                            )
+                        )
+                        indices.push(
+                            styleSheet.insertRule(
+                                ruleImage,
+                                styleSheet.cssRules.length
+                            )
+                        )
+
+                        setRuleIndices(indices)
+                    }
+
+                    setIsOpen(!isOpen)
+                })
+            })
+
+            await anim.finished
+
+            if (ruleIndices) {
+                const styleSheet = document.styleSheets[0]
+
+                ruleIndices
+                    .reverse()
+                    .forEach((ruleIndex) => styleSheet.deleteRule(ruleIndex))
+
+                setRuleIndices(null)
+            }
+        }
+
+        const { ref: intersectionRef, entry } = useIntersection({
+            root: cardRef.current,
+            threshold: 0.01,
+        })
+
+        useEffect(() => {
+            if (entry?.isIntersecting) {
+                setInView(true)
+            } else {
+                setInView(false)
+            }
+        }, [entry, id])
+
+        useEffect(() => {}, [isOpen])
+
         return (
-            <div ref={ref}>
-                {isOpen && (
-                    <div
-                        className="h-32"
-                        style={{
-                            backgroundColor: bgColor?.rgb,
-                        }}
-                    ></div>
-                )}
+            <div ref={ref} onClick={handleClick}>
                 <div
+                    ref={intersectionRef}
                     className={cn('h-32 rounded-xl overflow-clip', {
-                        'h-screen w-screen absolute top-0 left-0 bottom-0 right-0 rounded-none z-[60]':
+                        'h-screen w-screen fixed top-0 left-0 bottom-0 right-0 rounded-none z-[60]':
                             isOpen,
                     })}
                     style={{
-                        viewTransitionName:
-                            lastClickedId === id ? `entry-${id}` : 'none',
-                    }}
-                    onClick={() => {
-                        if (!document.startViewTransition) return
-
-                        document.startViewTransition(() => {
-                            flushSync(() => {
-                                setLastClickedId(isOpen ? 0 : id)
-                                setIsOpen(!isOpen)
-                            })
-                        })
+                        viewTransitionName: inView ? `body-${id}` : undefined,
                     }}
                 >
                     <div
@@ -121,6 +202,9 @@ const PokedexEntry = forwardRef<HTMLDivElement, IPokedexEntry>(
                                 )}
                                 style={{
                                     color: textColorHalf,
+                                    viewTransitionName: inView
+                                        ? `name-${id}`
+                                        : undefined,
                                 }}
                             >
                                 {name}
@@ -149,6 +233,9 @@ const PokedexEntry = forwardRef<HTMLDivElement, IPokedexEntry>(
                                             backgroundColor: isOpen
                                                 ? type1Color
                                                 : textColorLow,
+                                            viewTransitionName: inView
+                                                ? `type-1-${id}`
+                                                : undefined,
                                         }}
                                     >
                                         {Type1Icon && isOpen && (
@@ -172,6 +259,9 @@ const PokedexEntry = forwardRef<HTMLDivElement, IPokedexEntry>(
                                                 backgroundColor: isOpen
                                                     ? type2Color
                                                     : textColorLow,
+                                                viewTransitionName: inView
+                                                    ? `type-2-${id}`
+                                                    : undefined,
                                             }}
                                         >
                                             {Type2Icon && isOpen && (
@@ -198,10 +288,9 @@ const PokedexEntry = forwardRef<HTMLDivElement, IPokedexEntry>(
                             }pokemon-artworks/${id}.png`}
                             alt={name}
                             style={{
-                                viewTransitionName:
-                                    isOpen && lastClickedId !== id
-                                        ? `image-${id}`
-                                        : 'none',
+                                viewTransitionName: inView
+                                    ? `image-${id}`
+                                    : undefined,
                             }}
                         />
 
