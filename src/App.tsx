@@ -2,18 +2,15 @@ import { useEffect, useRef } from 'react'
 
 import { BiAbacus } from 'react-icons/bi'
 import PokeballLogo from '@/assets/pokedex.svg?react'
-import PokedexDetails from './components/PokedexDetails'
 import PokedexEntry from './components/PokedexEntry'
 import PokedexEntrySkeleton from './components/PokedexEntrySkeleton'
 import { cn } from './utils/Utils'
 import { useIntersection } from '@mantine/hooks'
-import { usePokedexStore } from './store/PokedexStore'
 import usePokemons from './hooks/usePokemons'
 
 function App() {
     const { pokemons, isError, error, isLoading, fetchNextPage, hasNextPage } =
         usePokemons()
-    const { isTransitioning, openDetails } = usePokedexStore()
     const lastEntryRef = useRef<HTMLDivElement>(null)
     const { ref, entry } = useIntersection({
         root: lastEntryRef.current,
@@ -41,22 +38,24 @@ function App() {
             <div
                 className={cn(
                     'z-20 grid grid-cols-2 gap-2 overflow-y-auto rounded-lg landscape:grid-cols-4 grow',
-                    {
-                        'overflow-hidden': isTransitioning || openDetails,
-                    }
+                    {}
                 )}
             >
-                <PokedexDetails />
-                {pokemons.map((pokemon) => {
+                {pokemons.map((pokemon, index) => {
                     return (
                         <PokedexEntry
+                            ref={
+                                hasNextPage && index === pokemons.length - 10
+                                    ? ref
+                                    : null
+                            }
                             key={pokemon.id}
                             name={pokemon.name}
                             id={pokemon.id}
                         />
                     )
                 })}
-                {hasNextPage && <PokedexEntrySkeleton ref={ref} />}
+                {hasNextPage && <PokedexEntrySkeleton />}
             </div>
         </div>
     )
