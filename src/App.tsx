@@ -30,14 +30,14 @@ function App() {
         <div className="relative flex flex-col w-screen h-screen gap-8 p-5 bg-slate-200 overflow-clip">
             <PokeballLogo className="absolute z-10 w-64 translate-x-1/2 -translate-y-1/2 top-10 right-9 text-black/5" />
             <div className="flex items-center justify-between">
-                <h1 className="text-4xl fo nt-bold ">Pokedex</h1>
-                <button className="relative overflow-visible">
+                <h1 className="text-4xl font-bold ">Pokedex</h1>
+                <button>
                     <BiAbacus className="text-3xl" />
                 </button>
             </div>
             <div
                 className={cn(
-                    'z-20 grid grid-cols-2 gap-2 overflow-y-auto rounded-lg landscape:grid-cols-4 grow',
+                    'grid grid-cols-2 gap-2 overflow-y-auto rounded-lg landscape:grid-cols-4 grow',
                     {}
                 )}
             >
