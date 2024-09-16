@@ -1,4 +1,4 @@
-import { forwardRef, useEffect, useRef, useState } from 'react'
+import { RefObject, forwardRef, useRef, useState } from 'react'
 import typeToIconMap, { PokemonType } from '@/utils/TypeToIconMap'
 
 import { Language } from '@/utils/PokemonApiUtils'
@@ -6,9 +6,9 @@ import PokemonNameList from '../PokemonNameList'
 import { cn } from '@/utils/Utils'
 import { flushSync } from 'react-dom'
 import typeToColorMap from '@/utils/TypeToColorMap'
-import { useIntersection } from '@mantine/hooks'
 import usePokemon from '@/hooks/usePokemon'
 import usePokemonColor from '@/hooks/usePokemonColor'
+import useTransitionApi from '@/hooks/useTransitionApi'
 
 interface IPokedexEntry {
     id: number
@@ -19,10 +19,12 @@ const PokedexEntry = forwardRef<HTMLDivElement, IPokedexEntry>(
     ({ id, language }, ref) => {
         const imageRef = useRef<HTMLImageElement>(null)
         const cardRef = useRef<HTMLDivElement>(null)
+        const combinedRef = (ref as RefObject<HTMLDivElement>) || cardRef
+
+        const { addTransitionNames, removeTransitionNames } =
+            useTransitionApi(combinedRef)
 
         const [isOpen, setIsOpen] = useState<boolean>(false)
-        const [ruleIndices, setRuleIndices] = useState<number[] | null>(null)
-        const [inView, setInView] = useState<boolean>(false)
 
         const { bgColor, textColors } = usePokemonColor(imageRef)
         const { textColorHalf, textColorLow } = textColors || {}
@@ -50,107 +52,35 @@ const PokedexEntry = forwardRef<HTMLDivElement, IPokedexEntry>(
             : ''
 
         const handleClick = async () => {
-            if (!document.startViewTransition) return
+            if (!isOpen) {
+                addTransitionNames()
+            }
 
-            const anim = document.startViewTransition(() => {
+            const transition = document.startViewTransition(() => {
                 flushSync(() => {
-                    if (!isOpen) {
-                        const styleSheet = document.styleSheets[0]
-                        const ruleBody = `
-                                ::view-transition-group(body-${id}) {
-                                    z-index: 100;
-                                }`
-                        const ruleName = `::view-transition-group(name-${id}) {
-                                    z-index: 101;
-                                }`
-                        const ruleType1 = `::view-transition-group(type-1-${id}) {
-                                    z-index: 101;
-                                }`
-                        const ruleType2 = `::view-transition-group(type-2-${id}) {
-                                    z-index: 101;
-                                }`
-                        const ruleImage = `::view-transition-group(image-${id}) {
-                                    z-index: 101;
-                                }`
-
-                        const indices = []
-                        indices.push(
-                            styleSheet.insertRule(
-                                ruleBody,
-                                styleSheet.cssRules.length
-                            )
-                        )
-                        indices.push(
-                            styleSheet.insertRule(
-                                ruleName,
-                                styleSheet.cssRules.length
-                            )
-                        )
-                        indices.push(
-                            styleSheet.insertRule(
-                                ruleType1,
-                                styleSheet.cssRules.length
-                            )
-                        )
-                        indices.push(
-                            styleSheet.insertRule(
-                                ruleType2,
-                                styleSheet.cssRules.length
-                            )
-                        )
-                        indices.push(
-                            styleSheet.insertRule(
-                                ruleImage,
-                                styleSheet.cssRules.length
-                            )
-                        )
-
-                        setRuleIndices(indices)
-                    }
-
                     setIsOpen(!isOpen)
                 })
             })
 
-            await anim.finished
+            try {
+                await transition.finished
 
-            if (ruleIndices) {
-                const styleSheet = document.styleSheets[0]
-
-                ruleIndices
-                    .reverse()
-                    .forEach((ruleIndex) => styleSheet.deleteRule(ruleIndex))
-
-                setRuleIndices(null)
+                if (isOpen) {
+                    removeTransitionNames()
+                }
+            } catch (error) {
+                console.error('View transition failed:', error)
             }
         }
 
-        const { ref: intersectionRef, entry } = useIntersection({
-            root: cardRef.current,
-            threshold: 0.01,
-        })
-
-        useEffect(() => {
-            if (entry?.isIntersecting) {
-                setInView(true)
-            } else {
-                setInView(false)
-            }
-        }, [entry, id])
-
-        useEffect(() => {}, [isOpen])
-
         return (
-            <div ref={ref} onClick={handleClick}>
+            <div ref={combinedRef} onClick={handleClick}>
                 <div
-                    ref={intersectionRef}
                     className={cn('h-32 rounded-xl overflow-clip', {
                         'h-screen w-screen fixed top-0 left-0 bottom-0 right-0 rounded-none z-[60]':
                             isOpen,
                     })}
-                    style={{
-                        viewTransitionName: inView ? `body-${id}` : undefined,
-                    }}
+                    data-transition-name={`body-${id}`}
                 >
                     <div
                         className={cn(
@@ -202,9 +132,6 @@ const PokedexEntry = forwardRef<HTMLDivElement, IPokedexEntry>(
                                 )}
                                 style={{
                                     color: textColorHalf,
-                                    viewTransitionName: inView
-                                        ? `name-${id}`
-                                        : undefined,
                                 }}
                             >
                                 {name}
@@ -233,10 +160,8 @@ const PokedexEntry = forwardRef<HTMLDivElement, IPokedexEntry>(
                                             backgroundColor: isOpen
                                                 ? type1Color
                                                 : textColorLow,
-                                            viewTransitionName: inView
-                                                ? `type-1-${id}`
-                                                : undefined,
                                         }}
+                                        data-transition-name={`type-1-${id}`}
                                     >
                                         {Type1Icon && isOpen && (
                                             <Type1Icon className="w-5 h-5" />
@@ -259,10 +184,8 @@ const PokedexEntry = forwardRef<HTMLDivElement, IPokedexEntry>(
                                                 backgroundColor: isOpen
                                                     ? type2Color
                                                     : textColorLow,
-                                                viewTransitionName: inView
-                                                    ? `type-2-${id}`
-                                                    : undefined,
                                             }}
+                                            data-transition-name={`type-2-${id}`}
                                         >
                                             {Type2Icon && isOpen && (
                                                 <Type2Icon className="w-5 h-5" />
@@ -287,11 +210,7 @@ const PokedexEntry = forwardRef<HTMLDivElement, IPokedexEntry>(
                                 import.meta.env.BASE_URL
                             }pokemon-artworks/${id}.png`}
                             alt={name}
-                            style={{
-                                viewTransitionName: inView
-                                    ? `image-${id}`
-                                    : undefined,
-                            }}
+                            data-transition-name={`image-${id}`}
                         />
 
                         {Type1Icon && (
