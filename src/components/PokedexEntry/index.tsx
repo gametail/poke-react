@@ -52,6 +52,11 @@ const PokedexEntry = forwardRef<HTMLDivElement, IPokedexEntry>(
             : ''
 
         const handleClick = async () => {
+            if (!document.startViewTransition) {
+                setIsOpen(!isOpen)
+                return
+            }
+
             if (!isOpen) {
                 addTransitionNames()
             }
