@@ -21,6 +21,7 @@ export type PokemonType =
     | 'dark'
     | 'steel'
     | 'fairy'
+    | 'unknown'
 
 const typeToIconMap: Record<PokemonType, FC<Icons.ITypeIcon>> = {
     normal: Icons.Normal,
@@ -41,6 +42,7 @@ const typeToIconMap: Record<PokemonType, FC<Icons.ITypeIcon>> = {
     dark: Icons.Dark,
     steel: Icons.Steel,
     fairy: Icons.Fairy,
+    unknown: Icons.Fairy,
 }
 
 export default typeToIconMap
