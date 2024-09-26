@@ -1,6 +1,9 @@
-import { RefObject, useEffect, useState } from 'react'
+import { DependencyList, RefObject, useEffect, useState } from 'react'
 
-const useTransitionApi = (ref: RefObject<HTMLElement>) => {
+const useTransitionApi = (
+    ref: RefObject<HTMLElement>,
+    deps: DependencyList
+) => {
     const [transitionElements, setTransitionElements] = useState<HTMLElement[]>(
         []
     )
@@ -45,7 +48,7 @@ const useTransitionApi = (ref: RefObject<HTMLElement>) => {
 
             setTransitionElements(allTransitionElements)
         }
-    }, [ref])
+    }, [...deps, ref])
 
     return { addTransitionNames, removeTransitionNames }
 }

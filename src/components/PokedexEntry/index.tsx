@@ -21,9 +21,6 @@ const PokedexEntry = forwardRef<HTMLDivElement, IPokedexEntry>(
         const cardRef = useRef<HTMLDivElement>(null)
         const combinedRef = (ref as RefObject<HTMLDivElement>) || cardRef
 
-        const { addTransitionNames, removeTransitionNames } =
-            useTransitionApi(combinedRef)
-
         const [isOpen, setIsOpen] = useState<boolean>(false)
 
         const { bgColor, textColors } = usePokemonColor(imageRef)
@@ -32,6 +29,11 @@ const PokedexEntry = forwardRef<HTMLDivElement, IPokedexEntry>(
         const { data } = usePokemon(id)
         const { pokemonData } = data || {}
         const { types } = pokemonData || {}
+
+        const { addTransitionNames, removeTransitionNames } = useTransitionApi(
+            combinedRef,
+            [data]
+        )
 
         const { names } = data?.pokemonSpeciesData || {}
         const name =
